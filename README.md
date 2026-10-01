@@ -30,7 +30,7 @@ Then restart WebPositive. `webpositive_hwvideo` pulls in:
 
 | Package | What it is |
 |---|---|
-| `haikuwebkit_x86` 1.9.19-6 | HaikuWebKit with the media engine and clock fixes (and the leak fixes from haiku-rwebpositive-arm64), replacing the official 1.9.19 |
+| `haikuwebkit_x86` 1.9.19-22 | HaikuWebKit with the media engine and clock fixes, Media Source Extensions and an assembly JavaScript interpreter ([haiku-webpositive-youtube-patch](https://github.com/rainygirl/haiku-webpositive-youtube-patch)), and the leak fixes from haiku-rwebpositive-arm64, replacing the official 1.9.19 |
 | `msvdx_media_x86` | the decoder add-on |
 | `msvdx_firmware` | Intel's microcode for the GMA500 video decoder |
 

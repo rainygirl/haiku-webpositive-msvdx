@@ -11,8 +11,8 @@ Since -4 it also registers the Haiku media engine, which HaikuWebKit never did: 
 Since -5 the player's clock counts the audio frames it actually played instead of trusting the decoder's timestamps, which the ffmpeg plugin's AAC decoder reports at about a twentieth of real time on MP4: playback crawled and the picture stalled.
 
 -6 is -5 with haikuwebkit_x86_media added to provides, so webpositive_hwvideo can require this build: a requirement on haikuwebkit_x86 >= 1.9.19-5 is met by the official -2 as well, because its provides name the version without a revision."
-vendor			"Haiku Project"
-packager		"Local Build <local@localhost>"
+vendor			"rainygirl"
+packager		"rainygirl <rainygirl@gmail.com>"
 copyrights	{
 	"1998-2024 Apple Inc., Google Inc., Sony, Samsung, Igalia, et al"
 }

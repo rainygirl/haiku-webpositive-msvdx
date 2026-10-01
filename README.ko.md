@@ -31,7 +31,7 @@ pkgman install webpositive_hwvideo
 
 | 패키지 | 내용 |
 |---|---|
-| `haikuwebkit_x86` 1.9.19-6 | 미디어 엔진/시계 수정(및 haiku-rwebpositive-arm64의 누수 수정)이 들어간 HaikuWebKit, 공식 1.9.19를 대체 |
+| `haikuwebkit_x86` 1.9.19-22 | 미디어 엔진/시계 수정, Media Source Extensions와 어셈블리 JavaScript 인터프리터([haiku-webpositive-youtube-patch](https://github.com/rainygirl/haiku-webpositive-youtube-patch)), haiku-rwebpositive-arm64의 누수 수정이 들어간 HaikuWebKit, 공식 1.9.19를 대체 |
 | `msvdx_media_x86` | 디코더 애드온 |
 | `msvdx_firmware` | GMA500 비디오 디코더용 Intel 마이크로코드 |
 
