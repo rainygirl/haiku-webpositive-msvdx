@@ -1,0 +1,70 @@
+name			haikuwebkit_x86
+version			1.9.19-6
+architecture		x86_gcc2
+summary			"Open source web browser engine"
+description		"WebKit is an open source web browser engine. WebKit is also the name of the Mac OS X system framework version of the engine that's used by Safari, Dashboard, Mail, and many other OS X applications. WebKit's HTML and JavaScript code began as a branch of the KHTML and KJS libraries from KDE.
+
+This is a locally built revision carrying memory-leak fixes backported from the arm64 port work: the RunLoopHaiku timer message leak, the WebPage draw-message leak, and the detached-subframe leak. The fourth arm64 fix does not apply here -- the PathHaiku hit-test bitmap leak comes from WTF_OVERRIDE_DELETE_FOR_CHECKED_PTR, which 1.9.19 does not use.
+
+Since -4 it also registers the Haiku media engine, which HaikuWebKit never did: MediaPlayer.cpp defined PlatformMediaEngineClassName and never used it, so no HTML5 audio or video played and every canPlayType() answered no -- YouTube said the browser could not play the video.
+
+Since -5 the player's clock counts the audio frames it actually played instead of trusting the decoder's timestamps, which the ffmpeg plugin's AAC decoder reports at about a twentieth of real time on MP4: playback crawled and the picture stalled.
+
+-6 is -5 with haikuwebkit_x86_media added to provides, so webpositive_hwvideo can require this build: a requirement on haikuwebkit_x86 >= 1.9.19-5 is met by the official -2 as well, because its provides name the version without a revision."
+vendor			"Haiku Project"
+packager		"Local Build <local@localhost>"
+copyrights	{
+	"1998-2024 Apple Inc., Google Inc., Sony, Samsung, Igalia, et al"
+}
+licenses	{
+	"GNU LGPL v2"
+	"GNU LGPL v2.1"
+	"MIT"
+}
+urls		{
+	"https://www.webkit.org/"
+}
+source-urls	{
+	"https://codeberg.org/haiku/haikuwebkit/releases/download/HaikuWebKit-1.9.19/haikuwebkit-1.9.19.tar.gz"
+}
+provides	{
+	haikuwebkit_x86 = 1.9.19
+	# The media engine and playback clock fixes. A versioned requirement on
+	# haikuwebkit_x86 cannot ask for them: every 1.9.19 package provides
+	# "haikuwebkit_x86 = 1.9.19" with no revision, which satisfies any >= 1.9.19-N.
+	haikuwebkit_x86_media = 1.0.0
+	cmd:jsc
+	lib:libjavascriptcore_x86 = 1.9.19 compat >= 1
+	lib:libwebkitlegacy_x86 = 1.9.19
+}
+# Copied verbatim from haikuwebkit_x86-1.9.19-2-x86_gcc2.hpkg. Do not tighten
+# any of these: the target machine cannot run pkgman update, so a requirement
+# it does not already satisfy makes the package uninstallable there. Note that
+# satisfying this list does NOT mean the binary will load -- these are the
+# package system's constraints, while the runtime loader goes by DT_NEEDED.
+# Check the two agree with the verify step of build-haikuwebkit-x86.sh.
+requires	{
+	haiku_x86 >= r1~beta6_hrev59866_5-1
+	lib:libatomic_x86 >= 1.2.0
+	lib:libavif_x86 >= 16.4.2
+	lib:libcurl_x86 >= 4.8.0
+	lib:libexecinfo_x86 >= 1.1
+	lib:libgl_x86 >= 1.0.0
+	lib:libicuuc_x86 >= 74.1
+	lib:libidn2_x86 >= 0.3.4
+	lib:libgpg_error_x86
+	lib:libjpeg_x86 >= 62.4.0
+	lib:libjxl_x86 >= 0.6.1
+	lib:liblcms2_x86 >= 2.0.19
+	lib:libpng16_x86 >= 16.53.0
+	lib:libpsl_x86 >= 5.3.5
+	lib:libsqlite3_x86 >= 3.50.4
+	lib:libssl_x86 >= 3
+	lib:libtasn1_x86 >= 6.6.3
+	lib:libunistring_x86 >= 5.2.0
+	lib:libwebp_x86 >= 7.2.0
+	lib:libwoff2dec_x86 >= 1.0.2
+	lib:libxml2_x86 >= 16.1.3
+	lib:libxslt_x86 >= 1.1.45
+	lib:libz_x86 >= 1.3.2
+}

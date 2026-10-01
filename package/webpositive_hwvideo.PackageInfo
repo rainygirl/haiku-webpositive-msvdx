@@ -1,0 +1,23 @@
+name		webpositive_hwvideo
+version		1.0.0-1
+architecture	x86_gcc2
+summary		"HTML5 video in WebPositive, decoded on the GMA500"
+description	"Installs what WebPositive needs to play HTML5 video, YouTube included, with H.264 decoded in hardware on the Intel GMA500 (Poulsbo) of the Sony VAIO P: haikuwebkit_x86 1.9.19-6, which registers HaikuWebKit's media engine and keeps a playback clock that works, and the msvdx_media_x86 decoder add-on with Intel's firmware. On other machines the video still plays, decoded in software by the ffmpeg plugin. Restart WebPositive after installing."
+packager	"rainygirl <rainygirl@gmail.com>"
+vendor		"rainygirl"
+copyrights {
+	"2026 rainygirl"
+}
+licenses {
+	"MIT"
+}
+provides {
+	webpositive_hwvideo = 1.0.0
+}
+requires {
+	haikuwebkit_x86_media >= 1.0.0
+	msvdx_media_x86 >= 1.0.0
+}
+urls {
+	"https://github.com/rainygirl/haiku-webpositive-msvdx"
+}

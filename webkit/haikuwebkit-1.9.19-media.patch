@@ -1,0 +1,115 @@
+--- orig/haikuwebkit/Source/WebCore/platform/graphics/MediaPlayer.cpp
++++ haikuwebkit/Source/WebCore/platform/graphics/MediaPlayer.cpp
+@@ -352,6 +352,14 @@
+     MediaPlayerPrivateHolePunch::registerMediaEngine(addMediaEngine);
+ #endif
+ 
++#if PLATFORM(HAIKU)
++    // The Haiku engine (MediaPlayerPrivateHaiku, which plays through the
++    // Media Kit) was never registered: PlatformMediaEngineClassName is
++    // defined above and used nowhere, so installedMediaEngines() was empty
++    // and every canPlayType() answered "". No HTML5 audio or video played.
++    PlatformMediaEngineClassName::registerMediaEngine(addMediaEngine);
++#endif
++
+     haveMediaEnginesVector() = true;
+ }
+ 
+--- orig/haikuwebkit/Source/WebCore/platform/graphics/haiku/MediaPlayerPrivateHaiku.cpp
++++ haikuwebkit/Source/WebCore/platform/graphics/haiku/MediaPlayerPrivateHaiku.cpp
+@@ -165,11 +165,15 @@
+     // Deleting the BMediaFile release the tracks
+     if (player->m_audioTrack) {
+         // TODO handle the case where there is a video, but no audio track.
+-        player->m_currentTime = player->m_audioTrack->CurrentTime() / 1000000.f;
+-
+-        int64 size64;
+-        if (player->m_audioTrack->ReadFrames(buffer, &size64) != B_OK)
+-        {
++        int64 size64 = 0;
++        if (player->m_audioTrack->ReadFrames(buffer, &size64) == B_OK) {
++            player->m_audioFramesPlayed += size64;
++            if (player->m_audioRate > 0) {
++                player->m_currentTime = player->m_timeBase
++                    + player->m_audioFramesPlayed / player->m_audioRate;
++            } else
++                player->m_currentTime = player->m_audioTrack->CurrentTime() / 1000000.f;
++        } else {
+             // Notify that we're done playing...
+             player->m_currentTime = player->m_audioTrack->Duration() / 1000000.f;
+             player->m_soundPlayer->Stop(false);
+@@ -186,15 +190,18 @@
+     }
+ 
+     if (player->m_videoTrack && player->m_audioTrack) {
+-        if (player->m_videoTrack->CurrentTime()
+-            < player->m_audioTrack->CurrentTime())
++        double videoTime = player->m_videoRate > 0
++            ? player->m_timeBase + player->m_videoFramesShown / player->m_videoRate
++            : player->m_videoTrack->CurrentTime() / 1000000.0;
++        if (videoTime < player->m_currentTime)
+         {
+             // Decode a video frame and show it on screen
+             int64 count;
+             if (player->m_videoTrack->ReadFrames(player->m_frameBuffer->Bits(),
+                 &count) != B_OK) {
+                 player->m_videoTrack = nullptr;
+-            }
++            } else
++                player->m_videoFramesShown++;
+ 
+             WeakPtr<MediaPlayerPrivate> p = WeakPtr(player);
+             callOnMainThread([p] {
+@@ -273,10 +280,16 @@
+     // Usually, seeking the video is rounded to the nearest keyframe. This
+     // modifies newTime, and we pass the adjusted value to the audio track, to
+     // keep them in sync
++    m_mediaLock.Lock();
+     if (m_videoTrack)
+         m_videoTrack->SeekToTime(&newTime);
+     if (m_audioTrack)
+         m_audioTrack->SeekToTime(&newTime);
++    m_timeBase = newTime / 1000000.0;
++    m_audioFramesPlayed = 0;
++    m_videoFramesShown = 0;
++    m_currentTime = m_timeBase;
++    m_mediaLock.Unlock();
+ }
+ 
+ bool MediaPlayerPrivate::seeking() const
+@@ -354,6 +367,7 @@
+                 if (m_videoTrack)
+                     continue;
+                 m_videoTrack = track;
++                m_videoRate = format.u.raw_video.field_rate;
+ 
+                 m_frameBuffer = new BBitmap(
+                     BRect(0, 0, format.Width() - 1, format.Height() - 1),
+@@ -367,6 +381,7 @@
+                 if (m_audioTrack)
+                     continue;
+                 m_audioTrack = track;
++                m_audioRate = format.u.raw_audio.frame_rate;
+ 
+                 m_soundPlayer = new BSoundPlayer(&format.u.raw_audio,
+                     "HTML5 Audio", playCallback, NULL, this);
+--- orig/haikuwebkit/Source/WebCore/platform/graphics/haiku/MediaPlayerPrivateHaiku.h
++++ haikuwebkit/Source/WebCore/platform/graphics/haiku/MediaPlayerPrivateHaiku.h
+@@ -123,6 +123,17 @@
+         float m_volume;
+         float m_currentTime;
+         bool m_paused;
++
++        // The playback clock. The Media Kit decoders do not report reliable
++        // times for every format -- on MP4, the ffmpeg plugin's AAC decoder
++        // advances CurrentTime() by about a twentieth of real time -- so the
++        // clock counts what was actually played: audio frames handed to the
++        // sound player, and video frames shown, from the last seek.
++        double m_timeBase { 0 };
++        int64 m_audioFramesPlayed { 0 };
++        int64 m_videoFramesShown { 0 };
++        double m_audioRate { 0 };
++        double m_videoRate { 0 };
+ };
+ 
+ }
