@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include <deque>
+#include <new>
 #include <vector>
 
 extern "C" {
@@ -81,6 +82,18 @@ private:
 	// ChunkProvider, for the ffmpeg decoder we hand a track to.
 	status_t GetNextChunk(const void** chunk, size_t* size,
 		media_header* header) override;
+
+	// Decoder owns and deletes its ChunkProvider (also when replacing it).
+	// The fallback must own a forwarding object, not the outer decoder itself.
+	class FallbackChunks : public ChunkProvider {
+	public:
+		explicit FallbackChunks(MsvdxDecoder* owner) : fOwner(owner) {}
+		status_t GetNextChunk(const void** chunk, size_t* size,
+			media_header* header) override
+		{ return fOwner->GetNextChunk(chunk, size, header); }
+	private:
+		MsvdxDecoder* fOwner; // borrowed; owns this provider through fFfmpeg
+	};
 
 	static void OnPicture(void* opaque, const rtv_msvdx_picture* picture);
 	bool ParseAvcC(const uint8* data, size_t size);
@@ -279,7 +292,10 @@ MsvdxDecoder::UseFfmpeg(const void* replay, size_t replaySize,
 	fFfmpeg = plugin->NewDecoder(0);
 	if (fFfmpeg == NULL)
 		return B_ERROR;
-	fFfmpeg->SetChunkProvider(this);
+	ChunkProvider* chunks = new(std::nothrow) FallbackChunks(this);
+	if (chunks == NULL)
+		return B_NO_MEMORY;
+	fFfmpeg->SetChunkProvider(chunks);
 
 	if (replay != NULL) {
 		fReplay.assign((const uint8*)replay, (const uint8*)replay + replaySize);
