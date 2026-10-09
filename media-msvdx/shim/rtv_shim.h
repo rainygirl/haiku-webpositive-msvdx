@@ -246,6 +246,15 @@ class Rect {
   constexpr int height() const { return h_; }
   constexpr bool IsEmpty() const { return w_ <= 0 || h_ <= 0; }
   Size size() const { return Size(w_, h_); }
+  void Intersect(const Rect& o) {
+    int l = std::max(x_, o.x_), t = std::max(y_, o.y_);
+    int r = std::min(x_ + w_, o.x_ + o.w_), b = std::min(y_ + h_, o.y_ + o.h_);
+    if (r <= l || b <= t) {
+      *this = Rect();
+      return;
+    }
+    *this = Rect(l, t, r - l, b - t);
+  }
   std::string ToString() const {
     return std::to_string(x_) + "," + std::to_string(y_) + " " +
            std::to_string(w_) + "x" + std::to_string(h_);
