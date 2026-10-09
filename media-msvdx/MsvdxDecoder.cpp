@@ -385,6 +385,9 @@ void
 MsvdxDecoder::OnPicture(void* opaque, const rtv_msvdx_picture* p)
 {
 	MsvdxDecoder* self = (MsvdxDecoder*)opaque;
+	if (p->visible_width <= 0 || p->visible_height <= 0 || p->stride <= 0
+		|| p->visible_x < 0 || p->visible_y < 0)
+		return;
 	Picture picture;
 	picture.width = p->visible_width;
 	picture.height = p->visible_height;

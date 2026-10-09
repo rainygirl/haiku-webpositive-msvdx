@@ -393,8 +393,13 @@ void rtv_msvdx::Output(const H264Picture* pic) {
     return;
   const gfx::Size coded = pool->size();
   gfx::Rect visible = pic->visible_rect();
+  // The crop comes from the stream's SPS, which can change under surfaces
+  // allocated for an earlier one: never describe more than the surface.
+  visible.Intersect(gfx::Rect(coded));
   if (visible.IsEmpty())
     visible = gfx::Rect(coded);
+  if (visible.IsEmpty())
+    return;
   out.coded_width = coded.width();
   out.coded_height = coded.height();
   out.visible_x = visible.x();
